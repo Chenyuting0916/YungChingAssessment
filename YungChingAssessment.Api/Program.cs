@@ -3,6 +3,8 @@ using YungChingAssessment.Core.Interfaces;
 using YungChingAssessment.Core.Services;
 using YungChingAssessment.Infrastructure.Data;
 using YungChingAssessment.Infrastructure.Repositories;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +21,15 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Dependency Injection
 builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IProductService, ProductService>();
+
+// AutoMapper
+builder.Services.AddAutoMapper(typeof(Program));
+
+// FluentValidation
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
 

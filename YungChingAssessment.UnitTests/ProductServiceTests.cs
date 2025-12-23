@@ -3,38 +3,37 @@ using Xunit;
 using YungChingAssessment.Core.Entities;
 using YungChingAssessment.Core.Interfaces;
 using YungChingAssessment.Core.Services;
+using YungChingAssessment.Core.Models;
 
 namespace YungChingAssessment.UnitTests;
 
 public class ProductServiceTests
 {
     private readonly Mock<IRepository<Product>> _mockRepo;
+    private readonly Mock<IUnitOfWork> _mockUnitOfWork;
     private readonly ProductService _service;
 
     public ProductServiceTests()
     {
         _mockRepo = new Mock<IRepository<Product>>();
-        _service = new ProductService(_mockRepo.Object);
+        _mockUnitOfWork = new Mock<IUnitOfWork>();
+        _service = new ProductService(_mockRepo.Object, _mockUnitOfWork.Object);
     }
 
-
-    
-    // REMOVED: Simple CRUD tests (GetById, Create success path) as they test Mock behavior, not business logic.
-    // Focusing only on Validation and Calculation logic as requested.
-
     [Fact]
-    public async Task CreateProductAsync_ThrowsException_WhenPriceIsInvalid()
+    public async Task GetPriceDetailsAsync_ThrowsException_WhenProductDoesNotExist()
     {
         // Arrange
-        var product = new Product { Name = "Invalid Product", Price = -10 };
+        var productId = 99;
+        _mockRepo.Setup(repo => repo.GetByIdAsync(productId))
+            .ReturnsAsync((Product?)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => _service.CreateProductAsync(product));
-        _mockRepo.Verify(repo => repo.AddAsync(It.IsAny<Product>()), Times.Never);
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.GetPriceDetailsAsync(productId));
     }
 
     [Fact]
-    public async Task GetDiscountedPriceAsync_ReturnsOriginalPrice_WhenPriceIsLow()
+    public async Task GetPriceDetailsAsync_ReturnsOriginalPrice_WhenPriceIsLow()
     {
         // Arrange
         var productId = 1;
@@ -43,14 +42,16 @@ public class ProductServiceTests
             .ReturnsAsync(product);
 
         // Act
-        var result = await _service.GetDiscountedPriceAsync(productId);
+        var result = await _service.GetPriceDetailsAsync(productId);
 
         // Assert
-        Assert.Equal(500, result);
+        Assert.Equal(500, result.OriginalPrice);
+        Assert.Equal(500, result.FinalPrice);
+        Assert.False(result.HasDiscount);
     }
 
     [Fact]
-    public async Task GetDiscountedPriceAsync_ReturnsDiscountedPrice_WhenPriceIsHigh()
+    public async Task GetPriceDetailsAsync_ReturnsDiscountedPrice_WhenPriceIsHigh()
     {
         // Arrange
         var productId = 1;
@@ -59,9 +60,25 @@ public class ProductServiceTests
             .ReturnsAsync(product);
 
         // Act
-        var result = await _service.GetDiscountedPriceAsync(productId);
+        var result = await _service.GetPriceDetailsAsync(productId);
 
         // Assert
-        Assert.Equal(1800, result); // 2000 * 0.9 = 1800
+        Assert.Equal(2000, result.OriginalPrice);
+        Assert.Equal(1800, result.FinalPrice); // 2000 * 0.9 = 1800
+        Assert.True(result.HasDiscount);
+    }
+
+    [Fact]
+    public async Task CreateProductAsync_CallsAddAndSave()
+    {
+        // Arrange
+        var product = new Product { Name = "New Product", Price = 100 };
+
+        // Act
+        await _service.CreateProductAsync(product);
+
+        // Assert
+        _mockRepo.Verify(repo => repo.AddAsync(product), Times.Once);
+        _mockUnitOfWork.Verify(uow => uow.SaveChangesAsync(), Times.Once);
     }
 }

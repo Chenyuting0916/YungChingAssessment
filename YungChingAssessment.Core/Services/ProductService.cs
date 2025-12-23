@@ -1,15 +1,18 @@
 using YungChingAssessment.Core.Entities;
 using YungChingAssessment.Core.Interfaces;
+using YungChingAssessment.Core.Models;
 
 namespace YungChingAssessment.Core.Services;
 
 public class ProductService : IProductService
 {
     private readonly IRepository<Product> _productRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public ProductService(IRepository<Product> productRepository)
+    public ProductService(IRepository<Product> productRepository, IUnitOfWork unitOfWork)
     {
         _productRepository = productRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<IEnumerable<Product>> GetAllProductsAsync()
@@ -17,19 +20,20 @@ public class ProductService : IProductService
         return await _productRepository.GetAllAsync();
     }
 
-    public async Task<Product?> GetProductByIdAsync(int id)
+    public async Task<Product> GetProductByIdAsync(int id)
     {
-        return await _productRepository.GetByIdAsync(id);
+        var product = await _productRepository.GetByIdAsync(id);
+        if (product == null)
+        {
+            throw new KeyNotFoundException($"Product with ID {id} not found.");
+        }
+        return product;
     }
 
     public async Task<Product> CreateProductAsync(Product product)
     {
-        if (product.Price <= 0)
-        {
-            throw new ArgumentException("Price must be greater than zero.");
-        }
-
         await _productRepository.AddAsync(product);
+        await _unitOfWork.SaveChangesAsync();
         return product;
     }
 
@@ -43,6 +47,7 @@ public class ProductService : IProductService
             existingProduct.IsActive = product.IsActive;
             
             await _productRepository.UpdateAsync(existingProduct);
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 
@@ -52,22 +57,34 @@ public class ProductService : IProductService
         if (product != null)
         {
             await _productRepository.DeleteAsync(product);
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 
-    public async Task<decimal> GetDiscountedPriceAsync(int id)
+    public async Task<ProductPriceDetails> GetPriceDetailsAsync(int id)
     {
         var product = await _productRepository.GetByIdAsync(id);
         if (product == null)
         {
-            throw new KeyNotFoundException("Product not found");
+            throw new KeyNotFoundException($"Product with ID {id} not found.");
         }
 
-        if (product.Price > 1000)
+        var finalPrice = CalculateDiscountedPrice(product.Price);
+
+        return new ProductPriceDetails(
+            product.Price,
+            finalPrice,
+            product.Price != finalPrice
+        );
+    }
+
+    private decimal CalculateDiscountedPrice(decimal originalPrice)
+    {
+        if (originalPrice > 1000)
         {
-            return product.Price * 0.9m; // 10% discount
+            return originalPrice * 0.9m; // 10% discount
         }
 
-        return product.Price;
+        return originalPrice;
     }
 }

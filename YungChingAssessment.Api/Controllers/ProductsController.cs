@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using YungChingAssessment.Api.DTOs;
 using YungChingAssessment.Core.Entities;
@@ -10,23 +11,19 @@ namespace YungChingAssessment.Api.Controllers;
 public class ProductsController : ControllerBase
 {
     private readonly IProductService _productService;
+    private readonly IMapper _mapper;
 
-    public ProductsController(IProductService productService)
+    public ProductsController(IProductService productService, IMapper mapper)
     {
         _productService = productService;
+        _mapper = mapper;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ProductDto>>> GetAll()
     {
         var products = await _productService.GetAllProductsAsync();
-        var dtos = products.Select(p => new ProductDto
-        {
-            Id = p.Id,
-            Name = p.Name,
-            Price = p.Price,
-            IsActive = p.IsActive
-        });
+        var dtos = _mapper.Map<IEnumerable<ProductDto>>(products);
         return Ok(dtos);
     }
 
@@ -34,51 +31,24 @@ public class ProductsController : ControllerBase
     public async Task<ActionResult<ProductDto>> GetById(int id)
     {
         var product = await _productService.GetProductByIdAsync(id);
-        if (product == null)
-        {
-            return NotFound();
-        }
-
-        return Ok(new ProductDto
-        {
-            Id = product.Id,
-            Name = product.Name,
-            Price = product.Price,
-            IsActive = product.IsActive
-        });
+        var dto = _mapper.Map<ProductDto>(product);
+        return Ok(dto);
     }
 
     [HttpPost]
     public async Task<ActionResult<ProductDto>> Create(CreateProductDto createDto)
     {
-        var product = new Product
-        {
-            Name = createDto.Name,
-            Price = createDto.Price,
-            IsActive = createDto.IsActive
-        };
-
+        var product = _mapper.Map<Product>(createDto);
         var createdProduct = await _productService.CreateProductAsync(product);
+        var dto = _mapper.Map<ProductDto>(createdProduct);
 
-        return CreatedAtAction(nameof(GetById), new { id = createdProduct.Id }, new ProductDto
-        {
-            Id = createdProduct.Id,
-            Name = createdProduct.Name,
-            Price = createdProduct.Price,
-            IsActive = createdProduct.IsActive
-        });
+        return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, UpdateProductDto updateDto)
     {
-        var product = new Product
-        {
-            Name = updateDto.Name,
-            Price = updateDto.Price,
-            IsActive = updateDto.IsActive
-        };
-
+        var product = _mapper.Map<Product>(updateDto);
         await _productService.UpdateProductAsync(id, product);
         return NoContent();
     }
@@ -93,21 +63,13 @@ public class ProductsController : ControllerBase
     [HttpGet("{id}/price-details")]
     public async Task<ActionResult<object>> GetDiscountPrice(int id)
     {
-        try
-        {
-            var originalPrice = (await _productService.GetProductByIdAsync(id))?.Price ?? 0;
-            var finalPrice = await _productService.GetDiscountedPriceAsync(id);
-            
-            return Ok(new 
-            { 
-                ProductPrice = originalPrice, 
-                FinalPrice = finalPrice, 
-                HasDiscount = originalPrice != finalPrice 
-            });
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound();
-        }
+        var details = await _productService.GetPriceDetailsAsync(id);
+        
+        return Ok(new 
+        { 
+            ProductPrice = details.OriginalPrice, 
+            FinalPrice = details.FinalPrice, 
+            HasDiscount = details.HasDiscount 
+        });
     }
 }
