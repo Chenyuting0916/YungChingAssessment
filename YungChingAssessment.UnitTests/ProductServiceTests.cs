@@ -1,5 +1,3 @@
-using Moq;
-using Xunit;
 using YungChingAssessment.Core.Entities;
 using YungChingAssessment.Core.Interfaces;
 using YungChingAssessment.Core.Services;

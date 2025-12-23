@@ -24,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\YungChingAssessment.Api\YungChingAssessment.Api.csproj" />
     <ProjectReference Include="..\YungChingAssessment.Core\YungChingAssessment.Core.csproj" />
     <ProjectReference Include="..\YungChingAssessment.Infrastructure\YungChingAssessment.Infrastructure.csproj" />
   </ItemGroup>
