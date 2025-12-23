@@ -69,6 +69,60 @@ public class ProductServiceTests
     }
 
     [Fact]
+    public async Task GetPriceDetailsAsync_ReturnsOriginalPrice_WhenPriceIsExactly1000()
+    {
+        // Arrange
+        var productId = 1;
+        var product = new Product { Id = productId, Price = 1000m };
+        _mockRepo.Setup(repo => repo.GetByIdAsync(productId)).ReturnsAsync(product);
+
+        // Act
+        var result = await _service.GetPriceDetailsAsync(productId);
+
+        // Assert
+        Assert.Equal(1000m, result.FinalPrice);
+        Assert.False(result.HasDiscount);
+    }
+
+    [Fact]
+    public async Task GetPriceDetailsAsync_ReturnsDiscountedPrice_WhenPriceIsJustAbove1000()
+    {
+        // Arrange
+        var productId = 1;
+        var product = new Product { Id = productId, Price = 1000.01m };
+        _mockRepo.Setup(repo => repo.GetByIdAsync(productId)).ReturnsAsync(product);
+
+        // Act
+        var result = await _service.GetPriceDetailsAsync(productId);
+
+        // Assert
+        Assert.Equal(900.009m, result.FinalPrice); // 1000.01 * 0.9
+        Assert.True(result.HasDiscount);
+    }
+
+    [Fact]
+    public async Task UpdateProductAsync_ThrowsException_WhenProductDoesNotExist()
+    {
+        // Arrange
+        var productId = 99;
+        _mockRepo.Setup(repo => repo.GetByIdAsync(productId)).ReturnsAsync((Product?)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.UpdateProductAsync(productId, new Product()));
+    }
+
+    [Fact]
+    public async Task DeleteProductAsync_ThrowsException_WhenProductDoesNotExist()
+    {
+        // Arrange
+        var productId = 99;
+        _mockRepo.Setup(repo => repo.GetByIdAsync(productId)).ReturnsAsync((Product?)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.DeleteProductAsync(productId));
+    }
+
+    [Fact]
     public async Task CreateProductAsync_CallsAddAndSave()
     {
         // Arrange

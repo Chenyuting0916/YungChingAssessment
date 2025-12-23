@@ -40,25 +40,29 @@ public class ProductService : IProductService
     public async Task UpdateProductAsync(int id, Product product)
     {
         var existingProduct = await _productRepository.GetByIdAsync(id);
-        if (existingProduct != null)
+        if (existingProduct == null)
         {
-            existingProduct.Name = product.Name;
-            existingProduct.Price = product.Price;
-            existingProduct.IsActive = product.IsActive;
-            
-            await _productRepository.UpdateAsync(existingProduct);
-            await _unitOfWork.SaveChangesAsync();
+            throw new KeyNotFoundException($"Product with ID {id} not found.");
         }
+
+        existingProduct.Name = product.Name;
+        existingProduct.Price = product.Price;
+        existingProduct.IsActive = product.IsActive;
+        
+        await _productRepository.UpdateAsync(existingProduct);
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task DeleteProductAsync(int id)
     {
         var product = await _productRepository.GetByIdAsync(id);
-        if (product != null)
+        if (product == null)
         {
-            await _productRepository.DeleteAsync(product);
-            await _unitOfWork.SaveChangesAsync();
+            throw new KeyNotFoundException($"Product with ID {id} not found.");
         }
+
+        await _productRepository.DeleteAsync(product);
+        await _unitOfWork.SaveChangesAsync();
     }
 
     public async Task<ProductPriceDetails> GetPriceDetailsAsync(int id)

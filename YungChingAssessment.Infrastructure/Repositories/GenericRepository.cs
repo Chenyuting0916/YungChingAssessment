@@ -34,13 +34,15 @@ public class GenericRepository<T> : IRepository<T> where T : class
         await _context.Set<T>().AddAsync(entity);
     }
 
-    public async Task UpdateAsync(T entity)
+    public Task UpdateAsync(T entity)
     {
         _context.Set<T>().Update(entity);
+        return Task.CompletedTask;
     }
 
-    public async Task DeleteAsync(T entity)
+    public Task DeleteAsync(T entity)
     {
         _context.Set<T>().Remove(entity);
+        return Task.CompletedTask;
     }
 }
