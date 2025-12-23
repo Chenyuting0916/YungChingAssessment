@@ -65,4 +65,47 @@ public class ProductServiceTests
         Assert.Equal(product, result);
         _mockRepo.Verify(repo => repo.AddAsync(product), Times.Once);
     }
+
+    [Fact]
+    public async Task CreateProductAsync_ThrowsException_WhenPriceIsInvalid()
+    {
+        // Arrange
+        var product = new Product { Name = "Invalid Product", Price = -10 };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() => _service.CreateProductAsync(product));
+        _mockRepo.Verify(repo => repo.AddAsync(It.IsAny<Product>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetDiscountedPriceAsync_ReturnsOriginalPrice_WhenPriceIsLow()
+    {
+        // Arrange
+        var productId = 1;
+        var product = new Product { Id = productId, Price = 500 };
+        _mockRepo.Setup(repo => repo.GetByIdAsync(productId))
+            .ReturnsAsync(product);
+
+        // Act
+        var result = await _service.GetDiscountedPriceAsync(productId);
+
+        // Assert
+        Assert.Equal(500, result);
+    }
+
+    [Fact]
+    public async Task GetDiscountedPriceAsync_ReturnsDiscountedPrice_WhenPriceIsHigh()
+    {
+        // Arrange
+        var productId = 1;
+        var product = new Product { Id = productId, Price = 2000 };
+        _mockRepo.Setup(repo => repo.GetByIdAsync(productId))
+            .ReturnsAsync(product);
+
+        // Act
+        var result = await _service.GetDiscountedPriceAsync(productId);
+
+        // Assert
+        Assert.Equal(1800, result); // 2000 * 0.9 = 1800
+    }
 }

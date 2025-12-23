@@ -24,6 +24,11 @@ public class ProductService : IProductService
 
     public async Task<Product> CreateProductAsync(Product product)
     {
+        if (product.Price <= 0)
+        {
+            throw new ArgumentException("Price must be greater than zero.");
+        }
+
         await _productRepository.AddAsync(product);
         return product;
     }
@@ -35,7 +40,6 @@ public class ProductService : IProductService
         {
             existingProduct.Name = product.Name;
             existingProduct.Price = product.Price;
-            existingProduct.CategoryId = product.CategoryId;
             existingProduct.IsActive = product.IsActive;
             
             await _productRepository.UpdateAsync(existingProduct);
@@ -49,5 +53,21 @@ public class ProductService : IProductService
         {
             await _productRepository.DeleteAsync(product);
         }
+    }
+
+    public async Task<decimal> GetDiscountedPriceAsync(int id)
+    {
+        var product = await _productRepository.GetByIdAsync(id);
+        if (product == null)
+        {
+            throw new KeyNotFoundException("Product not found");
+        }
+
+        if (product.Price > 1000)
+        {
+            return product.Price * 0.9m; // 10% discount
+        }
+
+        return product.Price;
     }
 }

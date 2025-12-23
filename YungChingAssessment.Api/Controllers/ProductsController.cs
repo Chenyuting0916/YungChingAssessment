@@ -25,8 +25,7 @@ public class ProductsController : ControllerBase
             Id = p.Id,
             Name = p.Name,
             Price = p.Price,
-            IsActive = p.IsActive,
-            CategoryName = p.Category?.Name ?? "Unknown" // Note: Simplify, might be null if not included
+            IsActive = p.IsActive
         });
         return Ok(dtos);
     }
@@ -45,8 +44,7 @@ public class ProductsController : ControllerBase
             Id = product.Id,
             Name = product.Name,
             Price = product.Price,
-            IsActive = product.IsActive,
-            CategoryName = product.Category?.Name ?? "Unknown"
+            IsActive = product.IsActive
         });
     }
 
@@ -57,8 +55,7 @@ public class ProductsController : ControllerBase
         {
             Name = createDto.Name,
             Price = createDto.Price,
-            IsActive = createDto.IsActive,
-            CategoryId = createDto.CategoryId
+            IsActive = createDto.IsActive
         };
 
         var createdProduct = await _productService.CreateProductAsync(product);
@@ -68,8 +65,7 @@ public class ProductsController : ControllerBase
             Id = createdProduct.Id,
             Name = createdProduct.Name,
             Price = createdProduct.Price,
-            IsActive = createdProduct.IsActive,
-            CategoryName = "Unknown" // Fetching category needs extra call or include
+            IsActive = createdProduct.IsActive
         });
     }
 
@@ -80,8 +76,7 @@ public class ProductsController : ControllerBase
         {
             Name = updateDto.Name,
             Price = updateDto.Price,
-            IsActive = updateDto.IsActive,
-            CategoryId = updateDto.CategoryId
+            IsActive = updateDto.IsActive
         };
 
         await _productService.UpdateProductAsync(id, product);
