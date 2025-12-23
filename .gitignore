@@ -473,5 +473,16 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 
+
 # Windows shortcuts
 *.lnk
+
+
+# SQLite
+*.db
+*.db-shm
+*.db-wal
+
+# Migrations (User requested)
+**/Migrations/
+
