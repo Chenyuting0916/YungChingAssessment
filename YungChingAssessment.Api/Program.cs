@@ -34,10 +34,12 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+app.UseSwagger();
+app.UseSwaggerUI();
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    // Additional development-only configurations can go here
 }
 
 app.UseMiddleware<YungChingAssessment.Api.Middleware.ExceptionHandlingMiddleware>();
