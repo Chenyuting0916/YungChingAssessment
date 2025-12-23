@@ -89,4 +89,25 @@ public class ProductsController : ControllerBase
         await _productService.DeleteProductAsync(id);
         return NoContent();
     }
+
+    [HttpGet("{id}/price-details")]
+    public async Task<ActionResult<object>> GetDiscountPrice(int id)
+    {
+        try
+        {
+            var originalPrice = (await _productService.GetProductByIdAsync(id))?.Price ?? 0;
+            var finalPrice = await _productService.GetDiscountedPriceAsync(id);
+            
+            return Ok(new 
+            { 
+                ProductPrice = originalPrice, 
+                FinalPrice = finalPrice, 
+                HasDiscount = originalPrice != finalPrice 
+            });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+    }
 }

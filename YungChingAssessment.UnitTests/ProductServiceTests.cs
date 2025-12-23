@@ -17,54 +17,10 @@ public class ProductServiceTests
         _service = new ProductService(_mockRepo.Object);
     }
 
-    [Fact]
-    public async Task GetProductByIdAsync_ReturnsProduct_WhenProductExists()
-    {
-        // Arrange
-        var productId = 1;
-        var product = new Product { Id = productId, Name = "Test Product", Price = 100 };
-        _mockRepo.Setup(repo => repo.GetByIdAsync(productId))
-            .ReturnsAsync(product);
 
-        // Act
-        var result = await _service.GetProductByIdAsync(productId);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(productId, result.Id);
-        Assert.Equal("Test Product", result.Name);
-    }
-
-    [Fact]
-    public async Task GetProductByIdAsync_ReturnsNull_WhenProductDoesNotExist()
-    {
-        // Arrange
-        var productId = 99;
-        _mockRepo.Setup(repo => repo.GetByIdAsync(productId))
-            .ReturnsAsync((Product?)null);
-
-        // Act
-        var result = await _service.GetProductByIdAsync(productId);
-
-        // Assert
-        Assert.Null(result);
-    }
-
-    [Fact]
-    public async Task CreateProductAsync_AddsProduct_AndReturnsIt()
-    {
-        // Arrange
-        var product = new Product { Name = "New Product", Price = 200 };
-        _mockRepo.Setup(repo => repo.AddAsync(product))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        var result = await _service.CreateProductAsync(product);
-
-        // Assert
-        Assert.Equal(product, result);
-        _mockRepo.Verify(repo => repo.AddAsync(product), Times.Once);
-    }
+    
+    // REMOVED: Simple CRUD tests (GetById, Create success path) as they test Mock behavior, not business logic.
+    // Focusing only on Validation and Calculation logic as requested.
 
     [Fact]
     public async Task CreateProductAsync_ThrowsException_WhenPriceIsInvalid()
