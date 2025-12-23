@@ -478,11 +478,9 @@ $RECYCLE.BIN/
 *.lnk
 
 
+
 # SQLite
 *.db
 *.db-shm
 *.db-wal
-
-# Migrations (User requested)
-**/Migrations/
 
